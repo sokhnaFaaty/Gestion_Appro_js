@@ -1,0 +1,55 @@
+{
+  "categories": [
+    {
+      "id": "cat-2",
+      "libelle": "Categorie 2"
+    },
+    {
+      "id": "Py_hWyW9bos",
+      "libelle": "Informatique"
+    },
+    {
+      "id": "KuuBUGErqiE",
+      "libelle": "SkinCare"
+    },
+    {
+      "id": "1KnGLZsi66Y",
+      "libelle": "Jus"
+    },
+    {
+      "id": "BZpbousCfZ4",
+      "libelle": "rsts"
+    },
+    {
+      "id": "quCe9DWb-f4",
+      "libelle": "aghkjh"
+    }
+  ],
+  "produits": [
+    {
+      "id": "DsRgO5E-6Wo",
+      "libelle": "rrhj",
+      "prix": 546,
+      "quantite": 5,
+      "categorieId": "Py_hWyW9bos",
+      "imageUrl": "https://res.cloudinary.com/djh0kp7rv/image/upload/v1781791599/wwzyjt5hb7nx81flknad.png"
+    },
+    {
+      "id": "idoJW8dQKPI",
+      "libelle": "etyu",
+      "prix": 343456,
+      "quantite": 5,
+      "categorieId": "cat-2",
+      "imageUrl": "https://res.cloudinary.com/djh0kp7rv/image/upload/v1781792406/wplwundeeniiael08b1q.png"
+    },
+    {
+      "id": "S7-I9L7QhrQ",
+      "libelle": "estrdyfugi",
+      "prix": 34567,
+      "quantite": 23,
+      "categorieId": "Py_hWyW9bos",
+      "imageUrl": "https://res.cloudinary.com/djh0kp7rv/image/upload/v1781793046/m2inisgysjsbykc5x5cd.png"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
