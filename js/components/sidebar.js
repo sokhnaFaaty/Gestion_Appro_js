@@ -1,16 +1,30 @@
+import { getUserRole, getSession } from "../utils/auth.js";
+
 const NAV_LINKS = [
   { page: "categories", label: "Catégories", icon: "fa-tags" },
   { page: "produits", label: "Produits", icon: "fa-bag-shopping" },
+  { page: "fournisseurs", label: "Fournisseurs", icon: "fa-truck" },
+];
 
+const NAV_LINKS_FOURNISSEUR = [
+  { page: "produits", label: "Produits", icon: "fa-bag-shopping" },
+  { page: "categories", label: "Catégories", icon: "fa-tags" },
 ];
 
 export function renderSidebar() {
-  const items = NAV_LINKS.map((link) => `
+  const role = getUserRole();
+  const user = getSession();
+
+  const links = role === "admin" ? NAV_LINKS_ADMIN : NAV_LINKS_FOURNISSEUR;
+
+  const items = NAV_LINKS.map(
+    (link) => `
     <button class="nav-link flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950" data-page="${link.page}">
       <i class="fa-solid ${link.icon} w-5 text-center"></i>
       <span>${link.label}</span>
     </button>
-  `).join("");
+  `,
+  ).join("");
 
   return `
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-72 -translate-x-full border-r border-slate-200 bg-white transition-transform duration-300 lg:translate-x-0">
@@ -27,16 +41,34 @@ export function renderSidebar() {
       <nav class="grid gap-2 px-4 pb-4" aria-label="Navigation principale">
         ${items}
       </nav>
-
-      <div class="absolute bottom-5 w-full px-5">
-        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-500">
-          <div class="mb-2 flex items-center gap-2 font-semibold text-slate-700">
-            <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
-            API JSON Server
+      <!-- Infos utilisateur + déconnexion -->
+      <div class="absolute bottom-5 w-full px-5 grid gap-3">
+ 
+        <!-- Carte utilisateur -->
+        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+          <div class="flex items-center gap-3">
+            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 font-bold text-sm">
+              ${user ? user.nom.charAt(0).toUpperCase() : "?"}
+            </div>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-bold text-slate-950">${user ? user.nom : ""}</p>
+              <p class="truncate text-xs text-slate-500">${user ? user.email : ""}</p>
+            </div>
           </div>
-          <code class="rounded-lg bg-white px-2 py-1 text-[11px] text-slate-700">localhost:3000</code>
+          <div class="mt-2">${roleBadge}</div>
         </div>
+ 
+        <!-- Bouton déconnexion -->
+        <button
+          id="logoutBtn"
+          class="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-bold text-rose-600 transition hover:bg-rose-50"
+        >
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span>Déconnexion</span>
+        </button>
+ 
       </div>
+
     </aside>
 
     <div id="sidebarOverlay" class="fixed inset-0 z-30 hidden bg-slate-950/40 backdrop-blur-sm lg:hidden"></div>

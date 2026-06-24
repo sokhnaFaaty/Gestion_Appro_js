@@ -127,8 +127,8 @@
 import { showToast } from "./components/toast.js";
 import { renderCategoriesPage } from "./pages/categoriesPage.js";
 import { renderProduitsPage } from "./pages/produitsPage.js";
-import { renderFournisseursPage } from "./pages/fournisseursPage.js";
-
+import { renderLoginPage } from "./pages/loginPage.js";
+import { isAuthenticated, getUserRole } from "./utils/auth.js";
 
 
 const routes = {
@@ -141,7 +141,6 @@ const routes = {
 
 // Routes accessibles uniquement par l'admin
 const ADMIN_ONLY_ROUTES = ["fournisseurs"];
-
 
 const titles = {
   categories: "Catégories",
@@ -167,7 +166,7 @@ function updatePageUrl(page) {
 }
 
 export async function navigate(page = DEFAULT_PAGE, updateUrl = true) {
-  // ── Guard 1 : non authentifié → login 
+  // ── Guard 1 : non authentifié → login ──
   if (!isAuthenticated()) {
     renderLoginPage();
     return;
@@ -182,7 +181,7 @@ export async function navigate(page = DEFAULT_PAGE, updateUrl = true) {
     await navigate("produits", true);
     return;
   }
- 
+
   const route = routes[activePage];
  
   if (updateUrl) {
