@@ -49,6 +49,8 @@
 import { renderSidebar } from "./components/sidebar.js";
 import { renderNavbar } from "./components/navbar.js";
 import { navigate, getCurrentPageFromUrl } from "./router.js";
+import { initProductView } from "./pages/produitsPage.js";
+
 
 function mountLayout() {
   document.getElementById("sidebarRoot").innerHTML = renderSidebar();
