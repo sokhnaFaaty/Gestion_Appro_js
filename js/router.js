@@ -127,6 +127,7 @@
 import { showToast } from "./components/toast.js";
 import { renderCategoriesPage } from "./pages/categoriesPage.js";
 import { renderProduitsPage } from "./pages/produitsPage.js";
+import { renderFournisseursPage } from "./pages/fournisseursPage.js";
 import { renderLoginPage } from "./pages/loginPage.js";
 import { isAuthenticated, getUserRole } from "./utils/auth.js";
 
