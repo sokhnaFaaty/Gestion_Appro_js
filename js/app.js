@@ -52,6 +52,7 @@ import { navigate, getCurrentPageFromUrl } from "./router.js";
 import { initProductView } from "./pages/produitsPage.js";
 
 
+
 function mountLayout() {
   document.getElementById("sidebarRoot").innerHTML = renderSidebar();
   document.getElementById("navbarRoot").innerHTML = renderNavbar();
