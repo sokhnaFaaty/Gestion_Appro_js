@@ -49,7 +49,6 @@
 import { renderSidebar } from "./components/sidebar.js";
 import { renderNavbar } from "./components/navbar.js";
 import { navigate, getCurrentPageFromUrl } from "./router.js";
-import { initProductView } from "./pages/produitsPage.js";
 
 import { isAuthenticated } from "./utils/auth.js";
 import { renderLoginPage } from "./pages/loginPage.js";
