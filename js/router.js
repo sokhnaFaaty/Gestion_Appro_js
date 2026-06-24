@@ -127,17 +127,26 @@
 import { showToast } from "./components/toast.js";
 import { renderCategoriesPage } from "./pages/categoriesPage.js";
 import { renderProduitsPage } from "./pages/produitsPage.js";
+import { renderLoginPage } from "./pages/loginPage.js";
+import { isAuthenticated, getUserRole } from "./utils/auth.js";
 
 
 const routes = {
   categories: renderCategoriesPage,
   produits: renderProduitsPage,
+  fournisseurs: renderFournisseursPage,
+
 
 };
+
+// Routes accessibles uniquement par l'admin
+const ADMIN_ONLY_ROUTES = ["fournisseurs"];
 
 const titles = {
   categories: "Catégories",
   produits: "Produits",
+    fournisseurs: "Fournisseurs",
+
 };
 
 const DEFAULT_PAGE = "categories";
@@ -157,14 +166,28 @@ function updatePageUrl(page) {
 }
 
 export async function navigate(page = DEFAULT_PAGE, updateUrl = true) {
-  const app = document.getElementById("app");
-
+  // ── Guard 1 : non authentifié → login ──
+  if (!isAuthenticated()) {
+    renderLoginPage();
+    return;
+  }
+ 
+  const role = getUserRole();
   const activePage = routes[page] ? page : DEFAULT_PAGE;
-  const route = routes[activePage];
+ 
+  // ── Guard 2 : fournisseur sur une route admin only → redirection produits ──
+  if (ADMIN_ONLY_ROUTES.includes(activePage) && role !== "admin") {
+    showToast("Accès refusé.", "error");
+    await navigate("produits", true);
+    return;
+  }
 
+  const route = routes[activePage];
+ 
   if (updateUrl) {
     updatePageUrl(activePage);
   }
+
 
   document.querySelectorAll("[data-page]").forEach((button) => {
     const isActive = button.dataset.page === activePage;

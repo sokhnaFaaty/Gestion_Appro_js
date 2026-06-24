@@ -78,3 +78,21 @@ export async function deleteProduit(id) {
     "Impossible de supprimer le produit."
   );
 }
+export async function countProduits(categorieId = null) {
+  const url = categorieId 
+    ? `${ENDPOINTS.produits}?categorieId=${categorieId}`
+    : ENDPOINTS.produits;
+  
+  const response = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Impossible de compter les produits.");
+  }
+
+  const data = await response.json();
+  return data.length;
+}

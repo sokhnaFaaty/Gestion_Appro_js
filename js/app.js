@@ -50,6 +50,11 @@ import { renderSidebar } from "./components/sidebar.js";
 import { renderNavbar } from "./components/navbar.js";
 import { navigate, getCurrentPageFromUrl } from "./router.js";
 
+import { isAuthenticated } from "./utils/auth.js";
+import { renderLoginPage } from "./pages/loginPage.js";
+import { logout } from "./services/authService.js";
+
+
 function mountLayout() {
   document.getElementById("sidebarRoot").innerHTML = renderSidebar();
   document.getElementById("navbarRoot").innerHTML = renderNavbar();
@@ -59,6 +64,8 @@ function initSidebar() {
   const sidebar = document.getElementById("sidebar");
   const overlay = document.getElementById("sidebarOverlay");
   const toggle = document.getElementById("sidebarToggle");
+
+    if (!sidebar || !overlay || !toggle) return { close: () => {} };
 
   const close = () => {
     sidebar.classList.add("-translate-x-full");
@@ -85,7 +92,19 @@ function initNavigation(sidebar) {
 }
 
 function startApp() {
+    // Si non connecté → afficher login directement (sans layout)
+  if (!isAuthenticated()) {
+    renderLoginPage();
+    return;
+  }
+ 
+  // Connecté → monter le layout complet
+
   mountLayout();
+  // Brancher le bouton déconnexion de la sidebar
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) logoutBtn.addEventListener("click", logout);
+
   const sidebar = initSidebar();
   initNavigation(sidebar);
   navigate(getCurrentPageFromUrl(), false);
