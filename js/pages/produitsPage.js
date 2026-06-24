@@ -3,6 +3,9 @@ import { renderTable } from "../components/table.js";
 import { openModal, openConfirm, closeModal } from "../components/modal.js"; // ← Ajouter closeModal
 import { showToast } from "../components/toast.js";
 import { escapeHtml } from "../utils/html.js";
+import { renderProductGrid } from "../components/productCard.js";
+import { renderViewToggle } from "../components/viewToggle.js";
+import { countProduits } from "../services/produitService.js";
 import { 
   showError, 
   hideError, 
@@ -21,6 +24,7 @@ import { uploadProductImage } from "../services/cloudinaryService.js";
 import { navigate } from "../router.js";
 
 let categoriesCache = [];
+
 
 function produitFormBody(produit, categories) {
   const options = categories
@@ -379,12 +383,86 @@ async function openProduitForm(produit = null) {
     },
   });
 }
-export async function renderProduitsPage() {
-  const app = document.getElementById("app");
 
-  const produits = await getProduits();
+// pages/produitsPage.js - AJOUTER cette fonction
+function renderProductContent(produits, catMap, total) {
+  if (currentView === "cards") {
+    return renderProductGrid(produits, catMap);
+  }
+  
+  // Vue table (utilisation de renderTable existant)
+  return renderTable({
+    rows: produits,
+    emptyMessage: "Aucun produit enregistré.",
+    columns: [
+      {
+        label: "Image",
+        render: (pro) => pro.imageUrl
+          ? `<img src="${pro.imageUrl}" alt="${escapeHtml(pro.libelle)}" class="h-12 w-12 rounded-lg object-cover" />`
+          : `<div class="h-12 w-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-image"></i></div>`
+      },
+      {
+        label: "Libellé",
+        render: (pro) =>
+          `<strong class="font-bold text-slate-950">${escapeHtml(pro.libelle)}</strong>`,
+      },
+      {
+        label: "Prix",
+        render: (pro) =>
+          `<strong class="font-bold text-slate-950">${Number(pro.prix).toLocaleString('fr-FR')} FCFA</strong>`,
+      },
+      {
+        label: "Quantité",
+        render: (pro) =>
+          `<strong class="font-bold text-slate-950">${escapeHtml(pro.quantite)}</strong>`,
+      },
+      {
+        label: "Catégorie",
+        render: (pro) =>
+          `<strong class="font-bold text-slate-950">${escapeHtml(catMap[pro.categorieId] || pro.categorieId)}</strong>`,
+      },
+      {
+        label: "Actions",
+        render: (pro) => `
+          <div class="flex flex-wrap gap-2">
+            <button class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-700 transition hover:bg-slate-50" data-edit="${escapeHtml(pro.id)}">
+              <i class="fa-solid fa-pen"></i>
+              Modifier
+            </button>
+            <button class="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-rose-700" data-delete="${escapeHtml(pro.id)}">
+              <i class="fa-solid fa-trash"></i>
+              Supprimer
+            </button>
+          </div>
+        `,
+      },
+    ],
+  });
+}
+
+// 
+// pages/produitsPage.js - REMPLACER la fonction renderProduitsPage
+export async function renderProduitsPage(page = 1) {
+  const app = document.getElementById("app");
   const categories = await getCategories();
   categoriesCache = categories;
+
+  const filterCategory = currentCategoryFilter;
+  
+  // Récupérer le nombre total de produits pour le filtre
+  const totalCount = await countProduits(filterCategory || undefined);
+  const totalPagesResult = Math.ceil(totalCount / ITEMS_PER_PAGE) || 1;
+  
+  // Récupérer les produits paginés
+  const paginatedResult = await getProduitsWithPagination(
+    page || currentPage,
+    ITEMS_PER_PAGE,
+    filterCategory || undefined
+  );
+
+  const { produits } = paginatedResult;
+  currentPage = page || currentPage;
+  totalPages = totalPagesResult;
 
   const catMap = Object.fromEntries(categories.map((c) => [c.id, c.libelle]));
 
@@ -395,70 +473,39 @@ export async function renderProduitsPage() {
         title: "Produits",
         subtitle: "Créer, modifier et supprimer les produits de l'application.",
         actionLabel: "Nouvel produit",
-        actionId: "addproduitBtn",
+        actionId: "addProduitBtn",
         actionIcon: "fa-plus",
       })}
 
       <article class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-        <div class="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div class="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h2 class="text-xl font-black text-slate-950">Liste des produits</h2>
-            <p class="text-sm text-slate-500">${produits.length} produit(s) enregistrée(s).</p>
+            <p class="text-sm text-slate-500">${totalCount} produit(s) enregistré(s).</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            ${categoryFilter({
+              categories,
+              selectedCategory: filterCategory,
+            })}
+            ${renderViewToggle({ currentView })}
           </div>
         </div>
 
-        ${renderTable({
-          rows: produits,
-          emptyMessage: "Aucun produit enregistré.",
-          columns: [
-            {
-              label: "Image",
-              render: (pro) => pro.imageUrl
-                ? `<img src="${pro.imageUrl}" alt="${escapeHtml(pro.libelle)}" class="h-12 w-12 rounded-lg object-cover" />`
-                : `<div class="h-12 w-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-image"></i></div>`
-            },
-            {
-              label: "Libellé",
-              render: (pro) =>
-                `<strong class="font-bold text-slate-950">${escapeHtml(pro.libelle)}</strong>`,
-            },
-            {
-              label: "Prix",
-              render: (pro) =>
-                `<strong class="font-bold text-slate-950">${escapeHtml(pro.prix)}</strong>`,
-            },
-            {
-              label: "Quantite",
-              render: (pro) =>
-                `<strong class="font-bold text-slate-950">${escapeHtml(pro.quantite)}</strong>`,
-            },
-            {
-              label: "Catégorie",
-              render: (pro) =>
-                `<strong class="font-bold text-slate-950">${escapeHtml(catMap[pro.categorieId] || pro.categorieId)}</strong>`,
-            },
-            {
-              label: "Actions",
-              render: (pro) => `
-                <div class="flex flex-wrap gap-2">
-                  <button class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-700 transition hover:bg-slate-50" data-edit="${escapeHtml(pro.id)}">
-                    <i class="fa-solid fa-pen"></i>
-                    Modifier
-                  </button>
-                  <button class="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-rose-700" data-delete="${escapeHtml(pro.id)}">
-                    <i class="fa-solid fa-trash"></i>
-                    Supprimer
-                  </button>
-                </div>
-              `,
-            },
-          ],
+        ${renderProductContent(produits, catMap, totalCount)}
+
+        ${renderPagination({
+          currentPage,
+          totalPages,
+          onPageChange: null,
         })}
       </article>
     </section>
   `;
 
   bindProduitEvents(produits);
+  bindFilterAndPaginationEvents();
+  bindViewToggleEvents();
 }
 
 function bindProduitEvents(produits) {
@@ -491,4 +538,4 @@ function bindProduitEvents(produits) {
       });
     });
   });
-}0
+}
