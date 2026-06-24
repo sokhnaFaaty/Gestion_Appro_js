@@ -55,6 +55,7 @@ import { isAuthenticated } from "./utils/auth.js";
 import { renderLoginPage } from "./pages/loginPage.js";
 import { logout } from "./services/authService.js";
 
+
 function mountLayout() {
   document.getElementById("sidebarRoot").innerHTML = renderSidebar();
   document.getElementById("navbarRoot").innerHTML = renderNavbar();

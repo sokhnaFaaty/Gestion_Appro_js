@@ -134,6 +134,8 @@ import { isAuthenticated, getUserRole } from "./utils/auth.js";
 const routes = {
   categories: renderCategoriesPage,
   produits: renderProduitsPage,
+  fournisseurs: renderFournisseursPage,
+
 
 };
 
@@ -143,6 +145,8 @@ const ADMIN_ONLY_ROUTES = ["fournisseurs"];
 const titles = {
   categories: "Catégories",
   produits: "Produits",
+    fournisseurs: "Fournisseurs",
+
 };
 
 const DEFAULT_PAGE = "categories";
@@ -179,10 +183,11 @@ export async function navigate(page = DEFAULT_PAGE, updateUrl = true) {
   }
 
   const route = routes[activePage];
-
+ 
   if (updateUrl) {
     updatePageUrl(activePage);
   }
+
 
   document.querySelectorAll("[data-page]").forEach((button) => {
     const isActive = button.dataset.page === activePage;
