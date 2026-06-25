@@ -1,6 +1,6 @@
 import { getUserRole, getSession } from "../utils/auth.js";
 
-const NAV_LINKS = [
+const NAV_LINKS_ADMIN = [
   { page: "categories", label: "Catégories", icon: "fa-tags" },
   { page: "produits", label: "Produits", icon: "fa-bag-shopping" },
   { page: "fournisseurs", label: "Fournisseurs", icon: "fa-truck" },
@@ -17,14 +17,16 @@ export function renderSidebar() {
 
   const links = role === "admin" ? NAV_LINKS_ADMIN : NAV_LINKS_FOURNISSEUR;
 
-  const items = NAV_LINKS.map(
-    (link) => `
+  const roleBadge = role === "admin"
+    ? `<span class="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-600">Admin</span>`
+    : `<span class="rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold text-cyan-600">Fournisseur</span>`;
+
+  const items = links.map((link) => `
     <button class="nav-link flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950" data-page="${link.page}">
       <i class="fa-solid ${link.icon} w-5 text-center"></i>
       <span>${link.label}</span>
     </button>
-  `,
-  ).join("");
+  `).join("");
 
   return `
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-72 -translate-x-full border-r border-slate-200 bg-white transition-transform duration-300 lg:translate-x-0">
