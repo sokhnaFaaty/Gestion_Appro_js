@@ -23,16 +23,6 @@ export function renderNavbar() {
         </div>
       </div>
  
-      <!-- Infos utilisateur -->
-      <div class="flex items-center gap-3">
-        ${roleBadge}
-        <div class="flex items-center gap-2">
-          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 text-sm font-bold">
-            ${user ? user.nom.charAt(0).toUpperCase() : "?"}
-          </div>
-          <span class="hidden sm:block text-sm font-semibold text-slate-700">${user ? user.nom : ""}</span>
-        </div>
-      </div>
     </header>
   `;
 }

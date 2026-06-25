@@ -15,9 +15,13 @@ export function renderSidebar() {
   const role = getUserRole();
   const user = getSession();
 
-  const links = role === "admin" ? NAV_LINKS_ADMIN : NAV_LINKS_FOURNISSEUR;
+  const links = role === "admin" ? NAV_LINKS : NAV_LINKS_FOURNISSEUR;
 
-  const items = NAV_LINKS.map(
+  const roleBadge = role === "admin"
+    ? `<span class="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-600">Admin</span>`
+    : `<span class="rounded-full bg-cyan-100 px-2.5 py-0.5 text-xs font-bold text-cyan-600">Fournisseur</span>`;
+
+  const items = links.map(
     (link) => `
     <button class="nav-link flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950" data-page="${link.page}">
       <i class="fa-solid ${link.icon} w-5 text-center"></i>

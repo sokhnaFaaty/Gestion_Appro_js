@@ -127,8 +127,12 @@
 import { showToast } from "./components/toast.js";
 import { renderCategoriesPage } from "./pages/categoriesPage.js";
 import { renderProduitsPage } from "./pages/produitsPage.js";
+import { renderFournisseursPage } from "./pages/fournisseursPage.js";
 import { renderLoginPage } from "./pages/loginPage.js";
 import { isAuthenticated, getUserRole } from "./utils/auth.js";
+import { renderSidebar } from "./components/sidebar.js";
+import { renderNavbar } from "./components/navbar.js";
+import { logout } from "./services/authService.js";
 
 
 const routes = {
@@ -171,7 +175,40 @@ export async function navigate(page = DEFAULT_PAGE, updateUrl = true) {
     renderLoginPage();
     return;
   }
- 
+
+  // ── Monte le layout si absent (premier appel après login) ──
+  if (!document.getElementById("sidebar")) {
+    document.getElementById("sidebarRoot").innerHTML = renderSidebar();
+    document.getElementById("navbarRoot").innerHTML = renderNavbar();
+
+    document.querySelector("main").className = "min-h-screen pt-16 lg:pl-72";
+    document.getElementById("app").className = "mx-auto max-w-7xl p-4 sm:p-6 lg:p-8";
+
+    const sidebarEl = document.getElementById("sidebar");
+    const overlayEl = document.getElementById("sidebarOverlay");
+    const toggleEl  = document.getElementById("sidebarToggle");
+
+    if (toggleEl) {
+      toggleEl.addEventListener("click", () => {
+        sidebarEl.classList.remove("-translate-x-full");
+        overlayEl.classList.remove("hidden");
+      });
+    }
+    if (overlayEl) {
+      overlayEl.addEventListener("click", () => {
+        sidebarEl.classList.add("-translate-x-full");
+        overlayEl.classList.add("hidden");
+      });
+    }
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) logoutBtn.addEventListener("click", logout);
+
+    document.querySelectorAll("[data-page]").forEach((btn) => {
+      btn.addEventListener("click", () => navigate(btn.dataset.page));
+    });
+  }
+
   const role = getUserRole();
   const activePage = routes[page] ? page : DEFAULT_PAGE;
  
@@ -208,6 +245,7 @@ export async function navigate(page = DEFAULT_PAGE, updateUrl = true) {
     navbarTitle.textContent = titles[activePage] || titles[DEFAULT_PAGE];
   }
 
+  const app = document.getElementById("app");
   app.innerHTML = `
     <div class="grid min-h-[50vh] place-items-center rounded-[2rem] border border-slate-200 bg-white p-10 text-center shadow-sm">
       <div>

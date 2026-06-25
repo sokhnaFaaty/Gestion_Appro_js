@@ -1,17 +1,19 @@
-// pages/fournisseursPage.js
 import { pageHeader } from "../components/pageHeader.js";
 import { renderTable } from "../components/table.js";
+import { renderPagination, bindPagination } from "../components/pagination.js";
 import { openModal, openConfirm } from "../components/modal.js";
 import { showToast } from "../components/toast.js";
 import { escapeHtml } from "../utils/html.js";
-import { validateField } from "../utils/formValidator.js";
-import { showError, hideError } from "../utils/formValidator.js";
+import { validateField, showError, hideError } from "../utils/formValidator.js";
 import {
   getFournisseurs,
   createFournisseur,
   updateFournisseur,
   deleteFournisseur,
 } from "../services/fournisseurService.js";
+
+let currentPage = 1;
+const PAGE_SIZE = 10;
 
 function fournisseurFormBody(fournisseur = null) {
   const isEdit = fournisseur !== null;
@@ -111,6 +113,11 @@ export async function renderFournisseursPage() {
   const app = document.getElementById("app");
   const fournisseurs = await getFournisseurs();
 
+  const totalPages = Math.ceil(fournisseurs.length / PAGE_SIZE);
+  if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+  const paginated = fournisseurs.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   app.innerHTML = `
     <section>
       ${pageHeader({
@@ -131,7 +138,7 @@ export async function renderFournisseursPage() {
         </div>
 
         ${renderTable({
-          rows: fournisseurs,
+          rows: paginated,
           emptyMessage: "Aucun fournisseur enregistré.",
           columns: [
             { label: "Nom", render: (f) => `<strong class="font-bold text-slate-950">${escapeHtml(f.nom)}</strong>` },
@@ -153,11 +160,17 @@ export async function renderFournisseursPage() {
             },
           ],
         })}
+
+        ${renderPagination({ currentPage, totalItems: fournisseurs.length, pageSize: PAGE_SIZE })}
       </article>
     </section>
   `;
 
-  bindFournisseurEvents(fournisseurs);
+  bindFournisseurEvents(paginated);
+  bindPagination((page) => {
+    currentPage = page;
+    renderFournisseursPage();
+  });
 }
 
 function bindFournisseurEvents(fournisseurs) {

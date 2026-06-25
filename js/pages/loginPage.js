@@ -5,18 +5,17 @@ import { getUserRole } from "../utils/auth.js";
 import { showError, hideError } from "../utils/formValidator.js";
 
 export function renderLoginPage() {
-  // Injecter la page de login dans le body directement
-  // (bypasse le layout sidebar/navbar)
+
   document.getElementById("sidebarRoot").innerHTML = "";
   document.getElementById("navbarRoot").innerHTML = "";
 
-  document.getElementById("app").innerHTML = "";
-
-  // On utilise le main comme conteneur plein écran
   const main = document.querySelector("main");
   main.className = "min-h-screen bg-slate-100 font-sans";
 
-  main.innerHTML = `
+  const app = document.getElementById("app");
+  app.className = "";
+
+  app.innerHTML = `
     <div class="flex min-h-screen items-center justify-center p-4">
       <div class="w-full max-w-md">
 
