@@ -1,5 +1,6 @@
 import { pageHeader } from "../components/pageHeader.js";
 import { renderTable } from "../components/table.js";
+import { renderPagination, bindPagination } from "../components/pagination.js";
 import { openModal, openConfirm } from "../components/modal.js";
 import { showToast } from "../components/toast.js";
 import { escapeHtml } from "../utils/html.js";
@@ -9,13 +10,15 @@ import {
   getCategories,
   updateCategorie,
 } from "../services/categorieService.js";
-import { 
-  showError, 
-  hideError, 
-  validateField, 
-  validateNumber, 
-  validateSelect 
+import {
+  showError,
+  hideError,
+  validateField,
 } from "../utils/formValidator.js";
+import { navigate } from "../router.js";
+
+let currentPage = 1;
+const PAGE_SIZE = 10;
 function categorieFormBody(categorie) {
   return `
     <div>
@@ -81,7 +84,7 @@ function openCategorieForm(categorie = null) {
           showToast("Catégorie créée avec succès.");
         }
 
-        await navigate(categories);
+        await navigate("categories");
         return true;
       } catch (error) {
         showToast(error.message, "error");
@@ -94,6 +97,11 @@ function openCategorieForm(categorie = null) {
 export async function renderCategoriesPage() {
   const app = document.getElementById("app");
   const categories = await getCategories();
+
+  const totalPages = Math.ceil(categories.length / PAGE_SIZE);
+  if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+  const paginated = categories.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   app.innerHTML = `
     <section>
@@ -115,7 +123,7 @@ export async function renderCategoriesPage() {
         </div>
 
         ${renderTable({
-          rows: categories,
+          rows: paginated,
           emptyMessage: "Aucune catégorie enregistrée.",
           columns: [
             { label: "Libellé", render: (cat) => `<strong class="font-bold text-slate-950">${escapeHtml(cat.libelle)}</strong>` },
@@ -136,11 +144,17 @@ export async function renderCategoriesPage() {
             },
           ],
         })}
+
+        ${renderPagination({ currentPage, totalItems: categories.length, pageSize: PAGE_SIZE })}
       </article>
     </section>
   `;
 
-  bindCategorieEvents(categories);
+  bindCategorieEvents(paginated);
+  bindPagination((page) => {
+    currentPage = page;
+    renderCategoriesPage();
+  });
 }
 
 function bindCategorieEvents(categories) {

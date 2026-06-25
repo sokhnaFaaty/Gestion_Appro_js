@@ -1,17 +1,17 @@
 import { pageHeader } from "../components/pageHeader.js";
 import { renderTable } from "../components/table.js";
-import { openModal, openConfirm, closeModal } from "../components/modal.js"; // ← Ajouter closeModal
+import { renderPagination, bindPagination } from "../components/pagination.js";
+import { openModal, openConfirm, closeModal } from "../components/modal.js";
 import { showToast } from "../components/toast.js";
 import { escapeHtml } from "../utils/html.js";
 import { renderProductGrid } from "../components/productCard.js";
 import { renderViewToggle } from "../components/viewToggle.js";
-import { countProduits } from "../services/produitService.js";
-import { 
-  showError, 
-  hideError, 
-  validateField, 
-  validateNumber, 
-  validateSelect 
+import {
+  showError,
+  hideError,
+  validateField,
+  validateNumber,
+  validateSelect,
 } from "../utils/formValidator.js";
 import {
   createProduit,
@@ -27,6 +27,8 @@ import { isFournisseur } from "../utils/auth.js";
 let categoriesCache = [];
 let currentView = "table";
 let currentCategoryFilter = null;
+let currentPage = 1;
+const PAGE_SIZE = 10;
 
 function categoryFilter({ categories, selectedCategory }) {
   const options = categories
@@ -45,6 +47,7 @@ function bindFilterAndPaginationEvents() {
   if (filterSelect) {
     filterSelect.addEventListener("change", () => {
       currentCategoryFilter = filterSelect.value || null;
+      currentPage = 1;
       renderProduitsPage();
     });
   }
@@ -54,6 +57,7 @@ function bindViewToggleEvents() {
   document.querySelectorAll(".view-toggle-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       currentView = btn.dataset.view;
+      currentPage = 1;
       renderProduitsPage();
     });
   });
@@ -480,10 +484,14 @@ export async function renderProduitsPage() {
   categoriesCache = categories;
 
   const allProduits = await getProduits();
-  const produits = currentCategoryFilter
+  const filtered = currentCategoryFilter
     ? allProduits.filter((p) => p.categorieId === currentCategoryFilter)
     : allProduits;
 
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const catMap = Object.fromEntries(categories.map((c) => [c.id, c.libelle]));
 
   app.innerHTML = `
@@ -493,7 +501,7 @@ export async function renderProduitsPage() {
         title: "Produits",
         subtitle: "Gérer les produits de l'application.",
         ...(!isFournisseur() && {
-          actionLabel: "Nouvel produit",
+          actionLabel: "Nouveau produit",
           actionId: "addProduitBtn",
           actionIcon: "fa-plus",
         }),
@@ -503,30 +511,33 @@ export async function renderProduitsPage() {
         <div class="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h2 class="text-xl font-black text-slate-950">Liste des produits</h2>
-            <p class="text-sm text-slate-500">${produits.length} produit(s) enregistré(s).</p>
+            <p class="text-sm text-slate-500">${filtered.length} produit(s) enregistré(s).</p>
           </div>
           <div class="flex flex-wrap items-center gap-3">
-            ${categoryFilter({
-              categories,
-              selectedCategory: currentCategoryFilter,
-            })}
+            ${categoryFilter({ categories, selectedCategory: currentCategoryFilter })}
             ${renderViewToggle({ currentView })}
           </div>
         </div>
 
-        ${renderProductContent(produits, catMap)}
+        ${renderProductContent(paginated, catMap)}
+
+        ${renderPagination({ currentPage, totalItems: filtered.length, pageSize: PAGE_SIZE })}
       </article>
     </section>
   `;
 
-  bindProduitEvents(produits);
+  bindProduitEvents(paginated);
   bindFilterAndPaginationEvents();
   bindViewToggleEvents();
+  bindPagination((page) => {
+    currentPage = page;
+    renderProduitsPage();
+  });
 }
 
 function bindProduitEvents(produits) {
   if (!isFournisseur()) {
-    const addBtn = document.getElementById("addproduitBtn");
+    const addBtn = document.getElementById("addProduitBtn");
     if (addBtn) addBtn.addEventListener("click", () => openProduitForm());
 
     document.querySelectorAll("[data-edit]").forEach((button) => {
