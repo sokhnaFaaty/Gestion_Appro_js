@@ -22,8 +22,42 @@ import {
 import { getCategories } from "../services/categorieService.js";
 import { uploadProductImage } from "../services/cloudinaryService.js";
 import { navigate } from "../router.js";
+import { isFournisseur } from "../utils/auth.js";
 
 let categoriesCache = [];
+let currentView = "table";
+let currentCategoryFilter = null;
+
+function categoryFilter({ categories, selectedCategory }) {
+  const options = categories
+    .map((cat) => `<option value="${escapeHtml(cat.id)}" ${selectedCategory === cat.id ? "selected" : ""}>${escapeHtml(cat.libelle)}</option>`)
+    .join("");
+  return `
+    <select id="categoryFilterSelect" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100">
+      <option value="">Toutes les catégories</option>
+      ${options}
+    </select>
+  `;
+}
+
+function bindFilterAndPaginationEvents() {
+  const filterSelect = document.getElementById("categoryFilterSelect");
+  if (filterSelect) {
+    filterSelect.addEventListener("change", () => {
+      currentCategoryFilter = filterSelect.value || null;
+      renderProduitsPage();
+    });
+  }
+}
+
+function bindViewToggleEvents() {
+  document.querySelectorAll(".view-toggle-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentView = btn.dataset.view;
+      renderProduitsPage();
+    });
+  });
+}
 
 
 function produitFormBody(produit, categories) {
@@ -363,7 +397,7 @@ async function openProduitForm(produit = null) {
           showToast("Produit créé avec succès.");
         }
 
-        // Nettoyer le modal
+        
         const modalRoot = document.getElementById("modalRoot");
         if (modalRoot) {
           modalRoot.innerHTML = "";
@@ -384,13 +418,12 @@ async function openProduitForm(produit = null) {
   });
 }
 
-// pages/produitsPage.js - AJOUTER cette fonction
-function renderProductContent(produits, catMap, total) {
+function renderProductContent(produits, catMap) {
   if (currentView === "cards") {
     return renderProductGrid(produits, catMap);
   }
   
-  // Vue table (utilisation de renderTable existant)
+  
   return renderTable({
     rows: produits,
     emptyMessage: "Aucun produit enregistré.",
@@ -425,6 +458,7 @@ function renderProductContent(produits, catMap, total) {
         label: "Actions",
         render: (pro) => `
           <div class="flex flex-wrap gap-2">
+            ${!isFournisseur() ? `
             <button class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-700 transition hover:bg-slate-50" data-edit="${escapeHtml(pro.id)}">
               <i class="fa-solid fa-pen"></i>
               Modifier
@@ -432,7 +466,7 @@ function renderProductContent(produits, catMap, total) {
             <button class="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-rose-700" data-delete="${escapeHtml(pro.id)}">
               <i class="fa-solid fa-trash"></i>
               Supprimer
-            </button>
+            </button>` : ""}
           </div>
         `,
       },
@@ -440,29 +474,15 @@ function renderProductContent(produits, catMap, total) {
   });
 }
 
-// 
-// pages/produitsPage.js - REMPLACER la fonction renderProduitsPage
-export async function renderProduitsPage(page = 1) {
+export async function renderProduitsPage() {
   const app = document.getElementById("app");
   const categories = await getCategories();
   categoriesCache = categories;
 
-  const filterCategory = currentCategoryFilter;
-  
-  // Récupérer le nombre total de produits pour le filtre
-  const totalCount = await countProduits(filterCategory || undefined);
-  const totalPagesResult = Math.ceil(totalCount / ITEMS_PER_PAGE) || 1;
-  
-  // Récupérer les produits paginés
-  const paginatedResult = await getProduitsWithPagination(
-    page || currentPage,
-    ITEMS_PER_PAGE,
-    filterCategory || undefined
-  );
-
-  const { produits } = paginatedResult;
-  currentPage = page || currentPage;
-  totalPages = totalPagesResult;
+  const allProduits = await getProduits();
+  const produits = currentCategoryFilter
+    ? allProduits.filter((p) => p.categorieId === currentCategoryFilter)
+    : allProduits;
 
   const catMap = Object.fromEntries(categories.map((c) => [c.id, c.libelle]));
 
@@ -471,34 +491,30 @@ export async function renderProduitsPage(page = 1) {
       ${pageHeader({
         kicker: "Référentiel",
         title: "Produits",
-        subtitle: "Créer, modifier et supprimer les produits de l'application.",
-        actionLabel: "Nouvel produit",
-        actionId: "addProduitBtn",
-        actionIcon: "fa-plus",
+        subtitle: "Gérer les produits de l'application.",
+        ...(!isFournisseur() && {
+          actionLabel: "Nouvel produit",
+          actionId: "addProduitBtn",
+          actionIcon: "fa-plus",
+        }),
       })}
 
       <article class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
         <div class="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h2 class="text-xl font-black text-slate-950">Liste des produits</h2>
-            <p class="text-sm text-slate-500">${totalCount} produit(s) enregistré(s).</p>
+            <p class="text-sm text-slate-500">${produits.length} produit(s) enregistré(s).</p>
           </div>
           <div class="flex flex-wrap items-center gap-3">
             ${categoryFilter({
               categories,
-              selectedCategory: filterCategory,
+              selectedCategory: currentCategoryFilter,
             })}
             ${renderViewToggle({ currentView })}
           </div>
         </div>
 
-        ${renderProductContent(produits, catMap, totalCount)}
-
-        ${renderPagination({
-          currentPage,
-          totalPages,
-          onPageChange: null,
-        })}
+        ${renderProductContent(produits, catMap)}
       </article>
     </section>
   `;
@@ -509,16 +525,17 @@ export async function renderProduitsPage(page = 1) {
 }
 
 function bindProduitEvents(produits) {
-  document
-    .getElementById("addproduitBtn")
-    .addEventListener("click", () => openProduitForm());
+  if (!isFournisseur()) {
+    const addBtn = document.getElementById("addproduitBtn");
+    if (addBtn) addBtn.addEventListener("click", () => openProduitForm());
 
-  document.querySelectorAll("[data-edit]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const produit = produits.find((item) => item.id === button.dataset.edit);
-      if (produit) openProduitForm(produit);
+    document.querySelectorAll("[data-edit]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const produit = produits.find((item) => item.id === button.dataset.edit);
+        if (produit) openProduitForm(produit);
+      });
     });
-  });
+  }
 
   document.querySelectorAll("[data-delete]").forEach((button) => {
     button.addEventListener("click", () => {
