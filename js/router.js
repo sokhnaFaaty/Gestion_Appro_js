@@ -141,7 +141,7 @@ const routes = {
 };
 
 // Routes accessibles uniquement par l'admin
-const ADMIN_ONLY_ROUTES = ["fournisseurs"];
+const ADMIN_ONLY_ROUTES = ["fournisseurs", "categories"];
 
 const titles = {
   categories: "Catégories",
@@ -208,7 +208,7 @@ export async function navigate(page = DEFAULT_PAGE, updateUrl = true) {
   if (navbarTitle) {
     navbarTitle.textContent = titles[activePage] || titles[DEFAULT_PAGE];
   }
-
+const app = document.getElementById("app");
   app.innerHTML = `
     <div class="grid min-h-[50vh] place-items-center rounded-[2rem] border border-slate-200 bg-white p-10 text-center shadow-sm">
       <div>

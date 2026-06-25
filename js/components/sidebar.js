@@ -7,8 +7,7 @@ const NAV_LINKS_ADMIN = [
 ];
 
 const NAV_LINKS_FOURNISSEUR = [
-  { page: "produits", label: "Produits", icon: "fa-bag-shopping" },
-  { page: "categories", label: "Catégories", icon: "fa-tags" },
+  { page: "produits", label: "Produits", icon: "fa-bag-shopping" }
 ];
 
 export function renderSidebar() {
