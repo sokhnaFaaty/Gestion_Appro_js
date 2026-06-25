@@ -18,7 +18,7 @@ export function renderNavbar() {
           <i class="fa-solid fa-bars"></i>
         </button>
         <div class="flex items-center gap-2 text-sm font-bold text-slate-500">
-          <i class="fa-solid fa-house text-slate-400"></i>
+          <i class="fa-solid fa-house text-slate-400">gi</i>
           <span id="navbarTitle">Catégories</span>
         </div>
       </div>
